@@ -1,12 +1,7 @@
--- ============================================================
--- Rezervační systém učeben a vybavení — Supabase schéma
--- Spusťte v Supabase SQL Editoru (v pořadí, jak jsou bloky).
--- ============================================================
 
--- 1) ENUM pro role uživatele
 create type public.app_role as enum ('student', 'admin');
 
--- 2) Tabulka profiles (rozšiřuje auth.users)
+
 create table public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   email text not null,
@@ -20,7 +15,7 @@ grant all on public.profiles to service_role;
 
 alter table public.profiles enable row level security;
 
--- security definer funkce pro kontrolu role (zabraňuje rekurzi v RLS)
+
 create or replace function public.has_role(_user_id uuid, _role public.app_role)
 returns boolean
 language sql
@@ -40,7 +35,7 @@ create policy "profile update - vlastní (kromě role) nebo admin"
   using (id = auth.uid() or public.has_role(auth.uid(), 'admin'))
   with check (id = auth.uid() or public.has_role(auth.uid(), 'admin'));
 
--- 3) Trigger pro automatické vytvoření profilu při registraci
+
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
@@ -58,7 +53,7 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
 
--- 4) Tabulka resources
+
 create table public.resources (
   id uuid primary key default gen_random_uuid(),
   name text not null,
@@ -89,7 +84,7 @@ create policy "resources: pouze admin CUD - update" on public.resources
 create policy "resources: pouze admin CUD - delete" on public.resources
   for delete to authenticated using (public.has_role(auth.uid(), 'admin'));
 
--- 5) Tabulka reservations
+
 create type public.reservation_status as enum ('pending', 'confirmed', 'cancelled');
 
 create table public.reservations (
@@ -127,7 +122,7 @@ create policy "reservations: delete vlastní nebo admin" on public.reservations
   for delete to authenticated
   using (user_id = auth.uid() or public.has_role(auth.uid(), 'admin'));
 
--- 6) DB-level kolizní kontrola (defense in depth — klient kontroluje navíc)
+
 create or replace function public.check_reservation_overlap()
 returns trigger
 language plpgsql
