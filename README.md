@@ -1,8 +1,10 @@
 npm install
+
 npm run dev
 
-SUPABASE_URL=https://<projekt>.supabase.co
-SUPABASE_KEY=<anon-public-key>
+SUPABASE_URL=https:// projekt .supabase.co
+
+SUPABASE_KEY= anon-public-key 
 
 -- ENUMY
 create type user_role as enum ('student', 'admin');
